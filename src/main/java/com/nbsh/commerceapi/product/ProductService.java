@@ -1,5 +1,7 @@
 package com.nbsh.commerceapi.product;
 
+import com.nbsh.commerceapi.common.exception.ResourceConflictException;
+import com.nbsh.commerceapi.common.exception.ResourceNotFoundException;
 import com.nbsh.commerceapi.product.dto.CreateProductRequest;
 import com.nbsh.commerceapi.product.dto.ProductResponse;
 import com.nbsh.commerceapi.product.dto.UpdateProductRequest;
@@ -21,7 +23,7 @@ public class ProductService {
     public ProductResponse createProduct(CreateProductRequest request) {
 
         if (productRepository.existsBySku(request.sku())) {
-            throw new IllegalArgumentException(
+            throw new ResourceConflictException(
                     "Product with SKU already exists: " + request.sku()
             );
         }
@@ -42,12 +44,7 @@ public class ProductService {
     @Transactional(readOnly = true)
     public ProductResponse getProduct(Long id) {
 
-        Product product = productRepository.findById(id)
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Product not found with id: " + id
-                        )
-                );
+        Product product = findProduct(id);
 
         return toResponse(product);
     }
@@ -67,17 +64,12 @@ public class ProductService {
             UpdateProductRequest request
     ) {
 
-        Product product = productRepository.findById(id)
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Product not found with id: " + id
-                        )
-                );
+        Product product = findProduct(id);
 
         if (!product.getSku().equals(request.sku())
                 && productRepository.existsBySku(request.sku())) {
 
-            throw new IllegalArgumentException(
+            throw new ResourceConflictException(
                     "Product with SKU already exists: " + request.sku()
             );
         }
@@ -86,10 +78,7 @@ public class ProductService {
         product.setDescription(request.description());
         product.setPrice(request.price());
         product.setSku(request.sku());
-
-        if (request.active() != null) {
-            product.setActive(request.active());
-        }
+        product.setActive(request.active());
 
         return toResponse(product);
     }
@@ -97,14 +86,19 @@ public class ProductService {
     @Transactional
     public void deleteProduct(Long id) {
 
-        Product product = productRepository.findById(id)
+        Product product = findProduct(id);
+
+        productRepository.delete(product);
+    }
+
+    private Product findProduct(Long id) {
+
+        return productRepository.findById(id)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new ResourceNotFoundException(
                                 "Product not found with id: " + id
                         )
                 );
-
-        productRepository.delete(product);
     }
 
     private ProductResponse toResponse(Product product) {
