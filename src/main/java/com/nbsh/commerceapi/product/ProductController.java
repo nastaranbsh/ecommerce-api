@@ -3,6 +3,7 @@ package com.nbsh.commerceapi.product;
 import com.nbsh.commerceapi.product.dto.CreateProductRequest;
 import com.nbsh.commerceapi.product.dto.ProductResponse;
 import com.nbsh.commerceapi.product.dto.UpdateProductRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,7 +30,7 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<ProductResponse> createProduct(
-            @RequestBody CreateProductRequest request
+            @Valid @RequestBody CreateProductRequest request
     ) {
 
         ProductResponse product =
@@ -55,7 +56,7 @@ public class ProductController {
     @PutMapping("/{id}")
     public ProductResponse updateProduct(
             @PathVariable Long id,
-            @RequestBody UpdateProductRequest request
+            @Valid @RequestBody UpdateProductRequest request
     ) {
         return productService.updateProduct(id, request);
     }
