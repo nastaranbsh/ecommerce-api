@@ -1,7 +1,10 @@
 package com.nbsh.commerceapi.product;
 
+import com.nbsh.commerceapi.category.Category;
+import com.nbsh.commerceapi.category.CategoryRepository;
 import com.nbsh.commerceapi.common.exception.ResourceConflictException;
 import com.nbsh.commerceapi.common.exception.ResourceNotFoundException;
+import com.nbsh.commerceapi.product.dto.CategorySummaryResponse;
 import com.nbsh.commerceapi.product.dto.CreateProductRequest;
 import com.nbsh.commerceapi.product.dto.ProductResponse;
 import com.nbsh.commerceapi.product.dto.UpdateProductRequest;
@@ -14,29 +17,42 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(
+            ProductRepository productRepository,
+            CategoryRepository categoryRepository
+    ) {
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @Transactional
-    public ProductResponse createProduct(CreateProductRequest request) {
+    public ProductResponse createProduct(
+            CreateProductRequest request
+    ) {
 
         if (productRepository.existsBySku(request.sku())) {
             throw new ResourceConflictException(
-                    "Product with SKU already exists: " + request.sku()
+                    "Product with SKU already exists: "
+                            + request.sku()
             );
         }
+
+        Category category =
+                findCategory(request.categoryId());
 
         Product product = new Product(
                 request.name(),
                 request.description(),
                 request.price(),
                 request.sku(),
-                request.active() == null || request.active()
+                request.active() == null || request.active(),
+                category
         );
 
-        Product savedProduct = productRepository.save(product);
+        Product savedProduct =
+                productRepository.save(product);
 
         return toResponse(savedProduct);
     }
@@ -44,9 +60,7 @@ public class ProductService {
     @Transactional(readOnly = true)
     public ProductResponse getProduct(Long id) {
 
-        Product product = findProduct(id);
-
-        return toResponse(product);
+        return toResponse(findProduct(id));
     }
 
     @Transactional(readOnly = true)
@@ -70,15 +84,20 @@ public class ProductService {
                 && productRepository.existsBySku(request.sku())) {
 
             throw new ResourceConflictException(
-                    "Product with SKU already exists: " + request.sku()
+                    "Product with SKU already exists: "
+                            + request.sku()
             );
         }
+
+        Category category =
+                findCategory(request.categoryId());
 
         product.setName(request.name());
         product.setDescription(request.description());
         product.setPrice(request.price());
         product.setSku(request.sku());
         product.setActive(request.active());
+        product.setCategory(category);
 
         return toResponse(product);
     }
@@ -101,7 +120,26 @@ public class ProductService {
                 );
     }
 
+    private Category findCategory(Long id) {
+
+        return categoryRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Category not found with id: " + id
+                        )
+                );
+    }
+
     private ProductResponse toResponse(Product product) {
+
+        Category category = product.getCategory();
+
+        CategorySummaryResponse categoryResponse =
+                new CategorySummaryResponse(
+                        category.getId(),
+                        category.getName(),
+                        category.getSlug()
+                );
 
         return new ProductResponse(
                 product.getId(),
@@ -110,6 +148,7 @@ public class ProductService {
                 product.getPrice(),
                 product.getSku(),
                 product.isActive(),
+                categoryResponse,
                 product.getCreatedAt(),
                 product.getUpdatedAt()
         );

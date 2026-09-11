@@ -1,13 +1,7 @@
 package com.nbsh.commerceapi.product;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import com.nbsh.commerceapi.category.Category;
+import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -41,6 +35,10 @@ public class Product {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
+
     protected Product() {
     }
 
@@ -49,13 +47,15 @@ public class Product {
             String description,
             BigDecimal price,
             String sku,
-            boolean active
+            boolean active,
+            Category category
     ) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.sku = sku;
         this.active = active;
+        this.category = category;
     }
 
     @PrePersist
@@ -112,6 +112,14 @@ public class Product {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 
     public Instant getCreatedAt() {

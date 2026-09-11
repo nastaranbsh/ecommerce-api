@@ -16,7 +16,6 @@ public record CreateProductRequest(
         @NotNull(message = "Price is required")
         @DecimalMin(
                 value = "0.00",
-                inclusive = true,
                 message = "Price must be greater than or equal to 0"
         )
         @Digits(
@@ -30,7 +29,9 @@ public record CreateProductRequest(
         @Size(max = 100, message = "SKU must not exceed 100 characters")
         String sku,
 
-        Boolean active
+        Boolean active,
 
+        @NotNull(message = "Category is required")
+        Long categoryId
 ) {
 }

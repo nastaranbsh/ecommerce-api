@@ -10,6 +10,7 @@ public record ProductResponse(
         BigDecimal price,
         String sku,
         boolean active,
+        CategorySummaryResponse category,
         Instant createdAt,
         Instant updatedAt
 ) {

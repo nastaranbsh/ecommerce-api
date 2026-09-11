@@ -30,7 +30,9 @@ public record UpdateProductRequest(
         String sku,
 
         @NotNull(message = "Active status is required")
-        Boolean active
+        Boolean active,
 
+        @NotNull(message = "Category is required")
+        Long categoryId
 ) {
 }
