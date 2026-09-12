@@ -2,12 +2,14 @@ package com.nbsh.commerceapi.product;
 
 import com.nbsh.commerceapi.category.Category;
 import com.nbsh.commerceapi.category.CategoryRepository;
+import com.nbsh.commerceapi.common.api.PageResponse;
+import com.nbsh.commerceapi.common.exception.InvalidRequestException;
 import com.nbsh.commerceapi.common.exception.ResourceConflictException;
 import com.nbsh.commerceapi.common.exception.ResourceNotFoundException;
-import com.nbsh.commerceapi.product.dto.CategorySummaryResponse;
-import com.nbsh.commerceapi.product.dto.CreateProductRequest;
-import com.nbsh.commerceapi.product.dto.ProductResponse;
-import com.nbsh.commerceapi.product.dto.UpdateProductRequest;
+import com.nbsh.commerceapi.product.dto.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,12 +66,37 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductResponse> getProducts() {
+    public PageResponse<ProductResponse> getProducts(
+            ProductFilter filter,
+            Pageable pageable
+    ) {
 
-        return productRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        validatePriceRange(filter);
+
+        Specification<Product> specification =
+                ProductSpecification.withFilters(filter);
+
+        Page<Product> productPage =
+                productRepository.findAll(
+                        specification,
+                        pageable
+                );
+
+        List<ProductResponse> content =
+                productPage.getContent()
+                        .stream()
+                        .map(this::toResponse)
+                        .toList();
+
+        return new PageResponse<>(
+                content,
+                productPage.getNumber(),
+                productPage.getSize(),
+                productPage.getTotalElements(),
+                productPage.getTotalPages(),
+                productPage.isFirst(),
+                productPage.isLast()
+        );
     }
 
     @Transactional
@@ -128,6 +155,37 @@ public class ProductService {
                                 "Category not found with id: " + id
                         )
                 );
+    }
+
+    private void validatePriceRange(
+            ProductFilter filter
+    ) {
+
+        if (filter.minPrice() != null
+                && filter.minPrice().signum() < 0) {
+
+            throw new InvalidRequestException(
+                    "Minimum price cannot be negative"
+            );
+        }
+
+        if (filter.maxPrice() != null
+                && filter.maxPrice().signum() < 0) {
+
+            throw new InvalidRequestException(
+                    "Maximum price cannot be negative"
+            );
+        }
+
+        if (filter.minPrice() != null
+                && filter.maxPrice() != null
+                && filter.minPrice()
+                .compareTo(filter.maxPrice()) > 0) {
+
+            throw new InvalidRequestException(
+                    "Minimum price cannot be greater than maximum price"
+            );
+        }
     }
 
     private ProductResponse toResponse(Product product) {

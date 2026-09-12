@@ -127,6 +127,26 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<ApiError> handleInvalidRequest(
+            InvalidRequestException exception,
+            HttpServletRequest request
+    ) {
+
+        ApiError error = new ApiError(
+                Instant.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                exception.getMessage(),
+                request.getRequestURI(),
+                List.of()
+        );
+
+        return ResponseEntity
+                .badRequest()
+                .body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpectedException(
             Exception exception,
