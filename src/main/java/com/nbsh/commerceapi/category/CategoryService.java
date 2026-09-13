@@ -6,6 +6,7 @@ import com.nbsh.commerceapi.category.dto.UpdateCategoryRequest;
 import com.nbsh.commerceapi.common.exception.ResourceConflictException;
 import com.nbsh.commerceapi.common.exception.ResourceNotFoundException;
 import com.nbsh.commerceapi.product.ProductRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ public class CategoryService {
         this.productRepository = productRepository;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public CategoryResponse createCategory(
             CreateCategoryRequest request
@@ -65,6 +67,7 @@ public class CategoryService {
                 .toList();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public CategoryResponse updateCategory(
             Long id,
@@ -87,6 +90,7 @@ public class CategoryService {
         return toResponse(category);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public void deleteCategory(Long id) {
 

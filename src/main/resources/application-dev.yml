@@ -1,0 +1,4 @@
+app:
+  dev-admin:
+    email: ${DEV_ADMIN_EMAIL:admin@example.com}
+    password: ${DEV_ADMIN_PASSWORD}

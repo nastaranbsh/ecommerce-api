@@ -38,3 +38,9 @@ logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+    issuer: commerce-api
+    access-token-ttl-seconds: ${JWT_ACCESS_TOKEN_TTL_SECONDS:900}

@@ -10,6 +10,7 @@ import com.nbsh.commerceapi.product.dto.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ public class ProductService {
         this.categoryRepository = categoryRepository;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public ProductResponse createProduct(
             CreateProductRequest request
@@ -99,6 +101,7 @@ public class ProductService {
         );
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public ProductResponse updateProduct(
             Long id,
@@ -129,6 +132,7 @@ public class ProductService {
         return toResponse(product);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public void deleteProduct(Long id) {
 
