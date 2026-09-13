@@ -1,5 +1,7 @@
 package com.nbsh.commerceapi.auth;
 
+import com.nbsh.commerceapi.auth.dto.LoginRequest;
+import com.nbsh.commerceapi.auth.dto.LoginResponse;
 import com.nbsh.commerceapi.auth.dto.RegisterRequest;
 import com.nbsh.commerceapi.auth.dto.RegisterResponse;
 import jakarta.validation.Valid;
@@ -38,5 +40,15 @@ public class AuthController {
                         )
                 )
                 .body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request
+    ) {
+
+        return ResponseEntity.ok(
+                authService.login(request)
+        );
     }
 }
