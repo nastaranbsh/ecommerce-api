@@ -1,5 +1,7 @@
 package com.nbsh.commerceapi.security;
 
+import com.nbsh.commerceapi.common.exception.RestAccessDeniedHandler;
+import com.nbsh.commerceapi.common.exception.RestAuthenticationEntryPoint;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,6 +9,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,6 +25,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -131,7 +135,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            JwtAuthenticationConverter jwtConverter
+            JwtAuthenticationConverter jwtAuthenticationConverter,
+            RestAuthenticationEntryPoint authenticationEntryPoint,
+            RestAccessDeniedHandler accessDeniedHandler
     ) throws Exception {
 
         http
@@ -146,6 +152,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize ->
                         authorize
 
+                                // Public authentication endpoints
                                 .requestMatchers(
                                         "/api/v1/auth/register",
                                         "/api/v1/auth/login",
@@ -154,6 +161,7 @@ public class SecurityConfig {
                                 )
                                 .permitAll()
 
+                                // Public catalog browsing
                                 .requestMatchers(
                                         HttpMethod.GET,
                                         "/api/v1/products",
@@ -163,17 +171,90 @@ public class SecurityConfig {
                                 )
                                 .permitAll()
 
+                                // Current-user operations
+                                .requestMatchers(
+                                        "/api/v1/me",
+                                        "/api/v1/me/**"
+                                )
+                                .authenticated()
+
+                                // Administrative user management
+                                .requestMatchers(
+                                        "/api/v1/users",
+                                        "/api/v1/users/**"
+                                )
+                                .hasRole("ADMIN")
+
+                                // Product modifications
+                                .requestMatchers(
+                                        HttpMethod.POST,
+                                        "/api/v1/products",
+                                        "/api/v1/products/**"
+                                )
+                                .hasRole("ADMIN")
+
+                                .requestMatchers(
+                                        HttpMethod.PUT,
+                                        "/api/v1/products/**"
+                                )
+                                .hasRole("ADMIN")
+
+                                .requestMatchers(
+                                        HttpMethod.DELETE,
+                                        "/api/v1/products/**"
+                                )
+                                .hasRole("ADMIN")
+
+                                // Category modifications
+                                .requestMatchers(
+                                        HttpMethod.POST,
+                                        "/api/v1/categories",
+                                        "/api/v1/categories/**"
+                                )
+                                .hasRole("ADMIN")
+
+                                .requestMatchers(
+                                        HttpMethod.PUT,
+                                        "/api/v1/categories/**"
+                                )
+                                .hasRole("ADMIN")
+
+                                .requestMatchers(
+                                        HttpMethod.DELETE,
+                                        "/api/v1/categories/**"
+                                )
+                                .hasRole("ADMIN")
+
+                                // Anything else requires authentication
                                 .anyRequest()
                                 .authenticated()
                 )
 
                 .oauth2ResourceServer(oauth2 ->
-                        oauth2.jwt(jwt ->
-                                jwt.jwtAuthenticationConverter(
-                                        jwtConverter
+                        oauth2
+                                .authenticationEntryPoint(
+                                        authenticationEntryPoint
                                 )
-                        )
+                                .accessDeniedHandler(
+                                        accessDeniedHandler
+                                )
+                                .jwt(jwt ->
+                                        jwt.jwtAuthenticationConverter(
+                                                jwtAuthenticationConverter
+                                        )
+                                )
+                )
+
+                .exceptionHandling(exceptions ->
+                        exceptions
+                                .authenticationEntryPoint(
+                                        authenticationEntryPoint
+                                )
+                                .accessDeniedHandler(
+                                        accessDeniedHandler
+                                )
                 );
+
 
         return http.build();
     }

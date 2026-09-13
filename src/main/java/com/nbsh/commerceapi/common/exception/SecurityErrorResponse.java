@@ -1,14 +1,12 @@
 package com.nbsh.commerceapi.common.exception;
 
 import java.time.Instant;
-import java.util.List;
 
-public record ApiError(
+public record SecurityErrorResponse(
         Instant timestamp,
         int status,
         String error,
         String message,
-        String path,
-        List<ValidationError> validationErrors
+        String path
 ) {
 }
