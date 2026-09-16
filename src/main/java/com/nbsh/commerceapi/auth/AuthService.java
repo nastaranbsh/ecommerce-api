@@ -4,6 +4,8 @@ import com.nbsh.commerceapi.auth.dto.LoginRequest;
 import com.nbsh.commerceapi.auth.dto.LoginResponse;
 import com.nbsh.commerceapi.auth.dto.RegisterRequest;
 import com.nbsh.commerceapi.auth.dto.RegisterResponse;
+import com.nbsh.commerceapi.cart.Cart;
+import com.nbsh.commerceapi.cart.CartRepository;
 import com.nbsh.commerceapi.common.exception.InvalidCredentialsException;
 import com.nbsh.commerceapi.common.exception.ResourceConflictException;
 import com.nbsh.commerceapi.security.JwtService;
@@ -27,17 +29,20 @@ public class AuthService {
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final CartRepository cartRepository;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authenticationManager,
-            JwtService jwtService
+            JwtService jwtService,
+            CartRepository cartRepository
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.cartRepository = cartRepository;
     }
 
     @Transactional
@@ -70,6 +75,11 @@ public class AuthService {
 
         User savedUser =
                 userRepository.save(user);
+
+        Cart cart =
+                new Cart(savedUser);
+
+        cartRepository.save(cart);
 
         return new RegisterResponse(
                 savedUser.getId(),
