@@ -6,6 +6,7 @@ import com.nbsh.commerceapi.common.api.PageResponse;
 import com.nbsh.commerceapi.common.exception.InvalidRequestException;
 import com.nbsh.commerceapi.common.exception.ResourceConflictException;
 import com.nbsh.commerceapi.common.exception.ResourceNotFoundException;
+import com.nbsh.commerceapi.inventory.InventoryService;
 import com.nbsh.commerceapi.product.dto.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,13 +22,16 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final InventoryService inventoryService;
 
     public ProductService(
             ProductRepository productRepository,
-            CategoryRepository categoryRepository
+            CategoryRepository categoryRepository,
+            InventoryService inventoryService
     ) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.inventoryService = inventoryService;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -57,6 +61,10 @@ public class ProductService {
 
         Product savedProduct =
                 productRepository.save(product);
+
+        inventoryService.createInventory(
+                savedProduct
+        );
 
         return toResponse(savedProduct);
     }

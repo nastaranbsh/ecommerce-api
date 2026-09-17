@@ -225,6 +225,12 @@ public class SecurityConfig {
                                 )
                                 .hasRole("ADMIN")
 
+                                .requestMatchers(
+                                        "/api/v1/admin",
+                                        "/api/v1/admin/**"
+                                )
+                                .hasRole("ADMIN")
+
                                 // Anything else requires authentication
                                 .anyRequest()
                                 .authenticated()

@@ -6,6 +6,7 @@ import com.nbsh.commerceapi.cart.dto.CartResponse;
 import com.nbsh.commerceapi.cart.dto.UpdateCartItemRequest;
 import com.nbsh.commerceapi.common.exception.InvalidRequestException;
 import com.nbsh.commerceapi.common.exception.ResourceNotFoundException;
+import com.nbsh.commerceapi.inventory.InventoryService;
 import com.nbsh.commerceapi.product.Product;
 import com.nbsh.commerceapi.product.ProductRepository;
 import com.nbsh.commerceapi.user.User;
@@ -25,20 +26,20 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final InventoryService inventoryService;
 
     public CartService(
             CartRepository cartRepository,
             CartItemRepository cartItemRepository,
             ProductRepository productRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            InventoryService inventoryService
     ) {
         this.cartRepository = cartRepository;
-        this.cartItemRepository =
-                cartItemRepository;
-        this.productRepository =
-                productRepository;
-        this.userRepository =
-                userRepository;
+        this.cartItemRepository = cartItemRepository;
+        this.productRepository = productRepository;
+        this.userRepository = userRepository;
+        this.inventoryService = inventoryService;
     }
 
     @Transactional(readOnly = true)
@@ -80,11 +81,21 @@ public class CartService {
 
             validateQuantity(newQuantity);
 
+            inventoryService.assertAvailable(
+                    product.getId(),
+                    newQuantity
+            );
+
             existingItem.setQuantity(
                     newQuantity
             );
 
         } else {
+
+            inventoryService.assertAvailable(
+                    product.getId(),
+                    request.quantity()
+            );
 
             CartItem item =
                     new CartItem(
@@ -123,6 +134,11 @@ public class CartService {
                     "Product is not currently available"
             );
         }
+
+        inventoryService.assertAvailable(
+                item.getProduct().getId(),
+                request.quantity()
+        );
 
         item.setQuantity(
                 request.quantity()
