@@ -239,4 +239,11 @@ public class OrderService {
             BigDecimal lineTotal
     ) {
     }
+
+    public OrderResponse toOrderResponse(
+            Order order
+    ) {
+        return toResponse(order);
+    }
+
 }

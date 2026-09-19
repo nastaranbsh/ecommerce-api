@@ -58,7 +58,8 @@ public class CartService {
             AddCartItemRequest request
     ) {
 
-        Cart cart = findCart(userId);
+//        Cart cart = findCart(userId);
+        Cart cart = findCartForUpdate(userId);
 
         Product product =
                 findAvailableProduct(
@@ -108,7 +109,8 @@ public class CartService {
         }
 
         return toResponse(
-                findCart(userId)
+//                findCart(userId)
+                cart
         );
     }
 
@@ -118,16 +120,19 @@ public class CartService {
             Long itemId,
             UpdateCartItemRequest request
     ) {
-
         validateQuantity(
                 request.quantity()
         );
 
-        CartItem item =
-                findOwnedCartItem(
-                        itemId,
-                        userId
-                );
+
+        Cart cart = findCartForUpdate(userId);
+
+        CartItem item = findCartItem(itemId, userId);
+//        CartItem item =
+//                findOwnedCartItem(
+//                        itemId,
+//                        userId
+//                );
 
         if (!item.getProduct().isActive()) {
             throw new InvalidRequestException(
@@ -145,7 +150,8 @@ public class CartService {
         );
 
         return toResponse(
-                findCart(userId)
+//                findCartForUpdate(userId)
+                cart
         );
     }
 
@@ -155,11 +161,14 @@ public class CartService {
             Long itemId
     ) {
 
-        CartItem item =
-                findOwnedCartItem(
-                        itemId,
-                        userId
-                );
+        Cart cart = findCartForUpdate(userId);
+
+        CartItem item = findCartItem(itemId, userId);;
+//        CartItem item =
+//                findOwnedCartItem(
+//                        itemId,
+//                        userId
+//                );
 
         cartItemRepository.delete(item);
     }
@@ -169,7 +178,8 @@ public class CartService {
             Long userId
     ) {
 
-        Cart cart = findCart(userId);
+//        Cart cart = findCart(userId);
+        Cart cart = findCartForUpdate(userId);
 
         cartItemRepository
                 .deleteAllByCartId(
@@ -186,6 +196,57 @@ public class CartService {
                 .orElseThrow(() ->
                         new IllegalStateException(
                                 "User cart does not exist"
+                        )
+                );
+    }
+
+    private Cart findCartForUpdate(
+            Long userId
+    ) {
+
+        return cartRepository
+                .findByUserIdForUpdate(userId)
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "User cart does not exist"
+                        )
+                );
+    }
+
+    private CartItem findCartItem(
+            Long cartId,
+            Long itemId
+    ) {
+
+        return cartItemRepository
+                .findById(itemId)
+                .filter(item ->
+                        item.getCart()
+                                .getId()
+                                .equals(cartId)
+                )
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Cart item not found with id: "
+                                        + itemId
+                        )
+                );
+    }
+
+    private CartItem findOwnedCartItem(
+            Long itemId,
+            Long userId
+    ) {
+
+        return cartItemRepository
+                .findByIdAndCartUserId(
+                        itemId,
+                        userId
+                )
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Cart item not found with id: "
+                                        + itemId
                         )
                 );
     }
@@ -211,24 +272,6 @@ public class CartService {
         }
 
         return product;
-    }
-
-    private CartItem findOwnedCartItem(
-            Long itemId,
-            Long userId
-    ) {
-
-        return cartItemRepository
-                .findByIdAndCartUserId(
-                        itemId,
-                        userId
-                )
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Cart item not found with id: "
-                                        + itemId
-                        )
-                );
     }
 
     private void validateQuantity(
