@@ -214,6 +214,29 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
+    @ExceptionHandler(
+            InvalidOrderStateException.class
+    )
+    public ResponseEntity<ApiErrorResponse>
+    handleInvalidOrderState(
+            InvalidOrderStateException exception,
+            HttpServletRequest request
+    ) {
+
+        ApiErrorResponse error = new ApiErrorResponse(
+                Instant.now(),
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                exception.getMessage(),
+                request.getRequestURI(),
+                List.of()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
             Exception exception,
