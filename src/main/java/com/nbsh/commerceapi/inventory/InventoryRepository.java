@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface InventoryRepository
@@ -24,5 +25,17 @@ public interface InventoryRepository
     Optional<Inventory> findByProductIdForUpdate(
             @Param("productId")
             Long productId
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select i
+            from Inventory i
+            where i.product.id in :productIds
+            order by i.product.id asc
+            """)
+    List<Inventory> findAllByProductIdsForUpdate(
+            @Param("productIds")
+            List<Long> productIds
     );
 }
