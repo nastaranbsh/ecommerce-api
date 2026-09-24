@@ -237,6 +237,32 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
+    @ExceptionHandler(
+            PaymentGatewayUnavailableException.class
+    )
+    public ResponseEntity<ApiErrorResponse>
+    handlePaymentGatewayUnavailable(
+            PaymentGatewayUnavailableException exception,
+            HttpServletRequest request
+    ) {
+
+        ApiErrorResponse error = new ApiErrorResponse(
+                Instant.now(),
+                HttpStatus.SERVICE_UNAVAILABLE.value(),
+                HttpStatus.SERVICE_UNAVAILABLE
+                        .getReasonPhrase(),
+                exception.getMessage(),
+                request.getRequestURI(),
+                List.of()
+        );
+
+        return ResponseEntity
+                .status(
+                        HttpStatus.SERVICE_UNAVAILABLE
+                )
+                .body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
             Exception exception,

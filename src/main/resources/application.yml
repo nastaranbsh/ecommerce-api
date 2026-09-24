@@ -44,3 +44,7 @@ security:
     secret: ${JWT_SECRET}
     issuer: commerce-api
     access-token-ttl-seconds: ${JWT_ACCESS_TOKEN_TTL_SECONDS:900}
+
+payment:
+  fake:
+    outcome: ${FAKE_PAYMENT_OUTCOME:SUCCESS}
