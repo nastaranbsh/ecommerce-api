@@ -12,6 +12,10 @@ import java.util.Optional;
 public interface PaymentAttemptRepository
         extends JpaRepository<PaymentAttempt, Long> {
 
+    Optional<PaymentAttempt> findByIdempotencyKey(
+            String idempotencyKey
+    );
+
     boolean existsByOrderIdAndStatusIn(
             Long orderId,
             Collection<PaymentStatus> statuses
@@ -24,7 +28,18 @@ public interface PaymentAttemptRepository
             where p.id = :id
             """)
     Optional<PaymentAttempt> findByIdForUpdate(
-            @Param("id")
-            Long id
+            @Param("id") Long id
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select p
+            from PaymentAttempt p
+            where p.idempotencyKey = :idempotencyKey
+            """)
+    Optional<PaymentAttempt>
+    findByIdempotencyKeyForUpdate(
+            @Param("idempotencyKey")
+            String idempotencyKey
     );
 }

@@ -8,6 +8,7 @@ public record PaymentResponse(
         String orderNumber,
         PaymentStatus status,
         String gatewayReference,
-        String message
+        String message,
+        boolean replayed
 ) {
 }

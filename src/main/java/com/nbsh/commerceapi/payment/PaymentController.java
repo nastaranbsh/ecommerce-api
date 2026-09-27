@@ -4,10 +4,7 @@ import com.nbsh.commerceapi.payment.dto.PaymentResponse;
 import com.nbsh.commerceapi.security.CurrentUser;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/me/orders")
@@ -30,7 +27,12 @@ public class PaymentController {
     @PostMapping("/{orderId}/payment")
     public PaymentResponse pay(
             @AuthenticationPrincipal Jwt jwt,
-            @PathVariable Long orderId
+            @PathVariable Long orderId,
+            @RequestHeader(
+                    value = "Idempotency-Key",
+                    required = false
+            )
+            String idempotencyKey
     ) {
 
         Long userId =
@@ -38,7 +40,8 @@ public class PaymentController {
 
         return paymentService.pay(
                 userId,
-                orderId
+                orderId,
+                idempotencyKey
         );
     }
 }

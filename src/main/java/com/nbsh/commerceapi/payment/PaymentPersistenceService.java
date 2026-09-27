@@ -43,7 +43,8 @@ public class PaymentPersistenceService {
     @Transactional
     public PreparedPayment preparePayment(
             Long userId,
-            Long orderId
+            Long orderId,
+            String idempotencyKey
     ) {
 
         Order order =
@@ -59,6 +60,29 @@ public class PaymentPersistenceService {
                                 )
                         );
 
+        PaymentAttempt existing =
+                paymentAttemptRepository
+                        .findByIdempotencyKey(
+                                idempotencyKey
+                        )
+                        .orElse(null);
+
+        if (existing != null) {
+
+            if (!existing.getOrder()
+                    .getId()
+                    .equals(orderId)) {
+
+                throw new ResourceConflictException(
+                        "Idempotency-Key has already been used for a different payment operation"
+                );
+            }
+
+            return toPreparedPayment(
+                    existing
+            );
+        }
+
         if (order.getStatus()
                 != OrderStatus.PENDING) {
 
@@ -67,7 +91,7 @@ public class PaymentPersistenceService {
             );
         }
 
-        boolean existingAttempt =
+        boolean otherActiveAttempt =
                 paymentAttemptRepository
                         .existsByOrderIdAndStatusIn(
                                 orderId,
@@ -78,28 +102,26 @@ public class PaymentPersistenceService {
                                 )
                         );
 
-        if (existingAttempt) {
+        if (otherActiveAttempt) {
+
             throw new ResourceConflictException(
-                    "This order already has an active or completed payment attempt"
+                    "This order already has a payment operation. Retry using its original Idempotency-Key."
             );
         }
 
         PaymentAttempt attempt =
                 new PaymentAttempt(
                         order,
-                        order.getTotalAmount()
+                        order.getTotalAmount(),
+                        idempotencyKey
                 );
 
         PaymentAttempt saved =
-                paymentAttemptRepository
-                        .save(attempt);
+                paymentAttemptRepository.save(
+                        attempt
+                );
 
-        return new PreparedPayment(
-                saved.getId(),
-                order.getId(),
-                order.getOrderNumber(),
-                order.getTotalAmount()
-        );
+        return toPreparedPayment(saved);
     }
 
     @Transactional
@@ -113,7 +135,7 @@ public class PaymentPersistenceService {
                         paymentAttemptId
                 );
 
-        ensureInitiated(attempt);
+        ensureFinalizable(attempt);
 
         Order order =
                 orderRepository
@@ -148,7 +170,8 @@ public class PaymentPersistenceService {
                 order.getOrderNumber(),
                 attempt.getStatus(),
                 gatewayReference,
-                "Payment succeeded"
+                "Payment succeeded",
+                false
         );
     }
 
@@ -164,7 +187,7 @@ public class PaymentPersistenceService {
                         paymentAttemptId
                 );
 
-        ensureInitiated(attempt);
+        ensureFinalizable(attempt);
 
         Order order =
                 orderRepository
@@ -202,7 +225,8 @@ public class PaymentPersistenceService {
                 order.getOrderNumber(),
                 attempt.getStatus(),
                 null,
-                failureMessage
+                failureMessage,
+                false
         );
     }
 
@@ -211,15 +235,44 @@ public class PaymentPersistenceService {
             Long paymentAttemptId,
             String message
     ) {
-
         PaymentAttempt attempt =
                 findAttemptForUpdate(
                         paymentAttemptId
                 );
 
-        ensureInitiated(attempt);
+        if (attempt.getStatus()
+                == PaymentStatus.UNKNOWN) {
+            return;
+        }
+
+        if (attempt.getStatus()
+                != PaymentStatus.INITIATED) {
+
+            throw new ResourceConflictException(
+                    "Payment attempt has already been finalized"
+            );
+        }
 
         attempt.markUnknown(message);
+    }
+
+    private PreparedPayment toPreparedPayment(
+            PaymentAttempt attempt
+    ) {
+
+        Order order =
+                attempt.getOrder();
+
+        return new PreparedPayment(
+                attempt.getId(),
+                order.getId(),
+                order.getOrderNumber(),
+                attempt.getAmount(),
+                attempt.getStatus(),
+                attempt.getGatewayReference(),
+                attempt.getFailureCode(),
+                attempt.getFailureMessage()
+        );
     }
 
     private PaymentAttempt findAttemptForUpdate(
@@ -238,12 +291,14 @@ public class PaymentPersistenceService {
                 );
     }
 
-    private void ensureInitiated(
+    private void ensureFinalizable(
             PaymentAttempt attempt
     ) {
 
         if (attempt.getStatus()
-                != PaymentStatus.INITIATED) {
+                != PaymentStatus.INITIATED
+                && attempt.getStatus()
+                != PaymentStatus.UNKNOWN) {
 
             throw new ResourceConflictException(
                     "Payment attempt has already been finalized"
@@ -326,7 +381,11 @@ public class PaymentPersistenceService {
             Long paymentAttemptId,
             Long orderId,
             String orderNumber,
-            BigDecimal amount
+            BigDecimal amount,
+            PaymentStatus status,
+            String gatewayReference,
+            String failureCode,
+            String failureMessage
     ) {
     }
 }

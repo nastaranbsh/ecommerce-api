@@ -123,20 +123,9 @@ public class CheckoutService {
                         itemDrafts
                 );
 
-//        cartItemRepository
-//                .deleteAllByCartId(
-//                        cart.getId()
-//                );
 
-        int deletedItems =
-                cartItemRepository.deleteAllByCartId(
-                        cart.getId()
-                );
-
-        //        cart.getItems().clear();
-
-        System.out.println(
-                "Deleted cart items: " + deletedItems
+        cartItemRepository.deleteAllByCartId(
+                cart.getId()
         );
 
         return orderService

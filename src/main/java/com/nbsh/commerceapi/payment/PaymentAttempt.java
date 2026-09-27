@@ -74,6 +74,14 @@ public class PaymentAttempt {
     private Long version;
 
     @Column(
+            name = "idempotency_key",
+            nullable = false,
+            unique = true,
+            length = 100
+    )
+    private String idempotencyKey;
+
+    @Column(
             name = "created_at",
             nullable = false,
             updatable = false
@@ -91,11 +99,13 @@ public class PaymentAttempt {
 
     public PaymentAttempt(
             Order order,
-            BigDecimal amount
+            BigDecimal amount,
+            String idempotencyKey
     ) {
         this.order = order;
         this.amount = amount;
         this.status = PaymentStatus.INITIATED;
+        this.idempotencyKey = idempotencyKey;
     }
 
     @PrePersist
@@ -137,6 +147,10 @@ public class PaymentAttempt {
 
     public String getFailureMessage() {
         return failureMessage;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
     }
 
     public Long getVersion() {

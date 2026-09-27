@@ -1,5 +1,6 @@
 package com.nbsh.commerceapi.payment;
 
+import com.nbsh.commerceapi.common.exception.InvalidRequestException;
 import com.nbsh.commerceapi.common.exception.PaymentGatewayUnavailableException;
 import com.nbsh.commerceapi.payment.dto.PaymentResponse;
 import com.nbsh.commerceapi.payment.gateway.PaymentGateway;
@@ -27,15 +28,32 @@ public class PaymentService {
 
     public PaymentResponse pay(
             Long userId,
-            Long orderId
+            Long orderId,
+            String idempotencyKey
     ) {
+
+        String key =
+                validateIdempotencyKey(
+                        idempotencyKey
+                );
 
         PaymentPersistenceService.PreparedPayment prepared =
                 persistenceService
                         .preparePayment(
                                 userId,
-                                orderId
+                                orderId,
+                                key
                         );
+
+        if (prepared.status()
+                == PaymentStatus.SUCCEEDED
+                || prepared.status()
+                == PaymentStatus.DECLINED) {
+
+            return replayCompleted(
+                    prepared
+            );
+        }
 
         PaymentGatewayResult result;
 
@@ -44,6 +62,7 @@ public class PaymentService {
             result =
                     paymentGateway.charge(
                             new PaymentGatewayCommand(
+                                    key,
                                     prepared.orderNumber(),
                                     prepared.amount()
                             )
@@ -57,7 +76,7 @@ public class PaymentService {
             );
 
             throw new PaymentGatewayUnavailableException(
-                    "Payment result is currently unknown. Do not retry the payment yet."
+                    "Payment result is currently unknown. Retry this request using the same Idempotency-Key."
             );
         }
 
@@ -76,5 +95,66 @@ public class PaymentService {
                         result.failureCode(),
                         result.failureMessage()
                 );
+    }
+
+    private String validateIdempotencyKey(
+            String idempotencyKey
+    ) {
+
+        if (idempotencyKey == null
+                || idempotencyKey.isBlank()) {
+
+            throw new InvalidRequestException(
+                    "Idempotency-Key header is required"
+            );
+        }
+
+        String normalized =
+                idempotencyKey.trim();
+
+        if (normalized.length() < 8
+                || normalized.length() > 100) {
+
+            throw new InvalidRequestException(
+                    "Idempotency-Key must be between 8 and 100 characters"
+            );
+        }
+
+        return normalized;
+    }
+
+    private PaymentResponse replayCompleted(
+            PaymentPersistenceService.PreparedPayment prepared
+    ) {
+
+        return switch (prepared.status()) {
+
+            case SUCCEEDED ->
+                    new PaymentResponse(
+                            prepared.paymentAttemptId(),
+                            prepared.orderId(),
+                            prepared.orderNumber(),
+                            PaymentStatus.SUCCEEDED,
+                            prepared.gatewayReference(),
+                            "Payment succeeded",
+                            true
+                    );
+
+            case DECLINED ->
+                    new PaymentResponse(
+                            prepared.paymentAttemptId(),
+                            prepared.orderId(),
+                            prepared.orderNumber(),
+                            PaymentStatus.DECLINED,
+                            null,
+                            prepared.failureMessage(),
+                            true
+                    );
+
+            default ->
+                    throw new IllegalStateException(
+                            "Payment is not in a replayable final state"
+                    );
+        };
     }
 }
