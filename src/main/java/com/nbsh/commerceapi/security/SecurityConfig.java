@@ -185,6 +185,19 @@ public class SecurityConfig {
                                 )
                                 .hasRole("ADMIN")
 
+                                .requestMatchers(
+                                        HttpMethod.GET,
+                                        "/api/v1/products/*/reviews",
+                                        "/api/v1/products/*/reviews/summary"
+                                )
+                                .permitAll()
+
+                                .requestMatchers(
+                                        HttpMethod.POST,
+                                        "/api/v1/products/*/reviews"
+                                )
+                                .authenticated()
+
                                 // Product modifications
                                 .requestMatchers(
                                         HttpMethod.POST,

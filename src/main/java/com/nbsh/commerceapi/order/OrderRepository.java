@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.Optional;
 
 public interface OrderRepository
@@ -68,5 +69,23 @@ public interface OrderRepository
         """)
     Optional<Order> findByIdForUpdate(
             @Param("orderId") Long orderId
+    );
+
+
+    @Query("""
+        select (count(o) > 0)
+        from Order o
+        join o.items oi
+        where o.user.id = :userId
+          and oi.product.id = :productId
+          and o.status in :statuses
+        """)
+    boolean existsPurchasedProduct(
+            @Param("userId")
+            Long userId,
+            @Param("productId")
+            Long productId,
+            @Param("statuses")
+            Collection<OrderStatus> statuses
     );
 }

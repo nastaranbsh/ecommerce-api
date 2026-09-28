@@ -263,6 +263,30 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
+    @ExceptionHandler(
+            ReviewNotAllowedException.class
+    )
+    public ResponseEntity<ApiErrorResponse>
+    handleReviewNotAllowed(
+            ReviewNotAllowedException exception,
+            HttpServletRequest request
+    ) {
+
+        ApiErrorResponse error = new ApiErrorResponse(
+                Instant.now(),
+                HttpStatus.FORBIDDEN.value(),
+                HttpStatus.FORBIDDEN
+                        .getReasonPhrase(),
+                exception.getMessage(),
+                request.getRequestURI(),
+                List.of()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
             Exception exception,
