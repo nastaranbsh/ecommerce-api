@@ -127,7 +127,7 @@ public class CartService {
 
         Cart cart = findCartForUpdate(userId);
 
-        CartItem item = findCartItem(itemId, userId);
+        CartItem item = findCartItem(itemId, cart.getId());
 //        CartItem item =
 //                findOwnedCartItem(
 //                        itemId,
@@ -163,7 +163,7 @@ public class CartService {
 
         Cart cart = findCartForUpdate(userId);
 
-        CartItem item = findCartItem(itemId, userId);;
+        CartItem item = findCartItem(itemId, cart.getId());;
 //        CartItem item =
 //                findOwnedCartItem(
 //                        itemId,
@@ -214,10 +214,9 @@ public class CartService {
     }
 
     private CartItem findCartItem(
-            Long cartId,
-            Long itemId
+            Long itemId,
+            Long cartId
     ) {
-
         return cartItemRepository
                 .findById(itemId)
                 .filter(item ->
@@ -352,8 +351,3 @@ public class CartService {
         );
     }
 }
-
-
-
-
-
