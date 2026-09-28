@@ -20,8 +20,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.Set;
 
@@ -42,12 +40,14 @@ public class ReviewService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
+    private final ReviewSummaryCacheService reviewSummaryCacheService;
 
     public ReviewService(
             ReviewRepository reviewRepository,
             ProductRepository productRepository,
             UserRepository userRepository,
-            OrderRepository orderRepository
+            OrderRepository orderRepository,
+            ReviewSummaryCacheService reviewSummaryCacheService
     ) {
         this.reviewRepository =
                 reviewRepository;
@@ -60,6 +60,9 @@ public class ReviewService {
 
         this.orderRepository =
                 orderRepository;
+
+        this.reviewSummaryCacheService =
+                reviewSummaryCacheService;
     }
 
     @Transactional
@@ -129,6 +132,9 @@ public class ReviewService {
         Review saved =
                 reviewRepository.save(review);
 
+        reviewSummaryCacheService
+                .evictSummary(productId);
+
         return toResponse(saved);
     }
 
@@ -171,39 +177,8 @@ public class ReviewService {
     public ReviewSummaryResponse getSummary(
             Long productId
     ) {
-
-        ensureProductExists(
-                productId
-        );
-
-        long count =
-                reviewRepository
-                        .countByProductId(
-                                productId
-                        );
-
-        Double average =
-                reviewRepository
-                        .findAverageRatingByProductId(
-                                productId
-                        );
-
-        BigDecimal averageRating =
-                average == null
-                        ? BigDecimal.ZERO
-                        : BigDecimal.valueOf(
-                                average
-                        )
-                        .setScale(
-                                2,
-                                RoundingMode.HALF_UP
-                        );
-
-        return new ReviewSummaryResponse(
-                productId,
-                count,
-                averageRating
-        );
+        return reviewSummaryCacheService
+                .getSummary(productId);
     }
 
     @Transactional
@@ -235,6 +210,13 @@ public class ReviewService {
                         .trim()
         );
 
+        Long productId =
+                review.getProduct()
+                        .getId();
+
+        reviewSummaryCacheService
+                .evictSummary(productId);
+
         return toResponse(review);
     }
 
@@ -257,7 +239,14 @@ public class ReviewService {
                                 )
                         );
 
+        Long productId =
+                review.getProduct()
+                        .getId();
+
         reviewRepository.delete(review);
+
+        reviewSummaryCacheService
+                .evictSummary(productId);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -278,7 +267,14 @@ public class ReviewService {
                                 )
                         );
 
+        Long productId =
+                review.getProduct()
+                        .getId();
+
         reviewRepository.delete(review);
+
+        reviewSummaryCacheService
+                .evictSummary(productId);
     }
 
     private void ensureProductExists(
