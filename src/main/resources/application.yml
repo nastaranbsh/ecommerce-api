@@ -40,16 +40,40 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include:
+          - health
+          - info
+          - metrics
+          - prometheus
 
   endpoint:
     health:
-      show-details: always
+      show-details: when_authorized
+      probes:
+        enabled: true
+        add-additional-paths: true
+
+  health:
+    redis:
+      enabled: true
+
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: ${APP_ENVIRONMENT:local}
 
 logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
+
+  structured:
+    format:
+      console: ecs
+
+    ecs:
+      service:
+        environment: ${APP_ENVIRONMENT:local}
 
 security:
   jwt:

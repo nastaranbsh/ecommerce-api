@@ -155,9 +155,9 @@ public class SecurityConfig {
                                 // Public authentication endpoints
                                 .requestMatchers(
                                         "/api/v1/auth/register",
-                                        "/api/v1/auth/login",
+                                        "/api/v1/auth/login"/*,
                                         "/api/v1/health",
-                                        "/actuator/health"
+                                        "/actuator/health"*/
                                 )
                                 .permitAll()
 
@@ -241,6 +241,19 @@ public class SecurityConfig {
                                 .requestMatchers(
                                         "/api/v1/admin",
                                         "/api/v1/admin/**"
+                                )
+                                .hasRole("ADMIN")
+
+                                .requestMatchers(
+                                        "/actuator/health",
+                                        "/actuator/health/**",
+                                        "/livez",
+                                        "/readyz"
+                                )
+                                .permitAll()
+
+                                .requestMatchers(
+                                        "/actuator/**"
                                 )
                                 .hasRole("ADMIN")
 

@@ -9,6 +9,7 @@ import com.nbsh.commerceapi.common.exception.InvalidRequestException;
 import com.nbsh.commerceapi.common.exception.ResourceNotFoundException;
 import com.nbsh.commerceapi.inventory.Inventory;
 import com.nbsh.commerceapi.inventory.InventoryRepository;
+import com.nbsh.commerceapi.observability.CommerceMetrics;
 import com.nbsh.commerceapi.order.Order;
 import com.nbsh.commerceapi.order.OrderService;
 import com.nbsh.commerceapi.order.dto.OrderResponse;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -30,11 +33,14 @@ public class CheckoutService {
     private final InventoryRepository inventoryRepository;
     private final OrderService orderService;
 
+    private final CommerceMetrics commerceMetrics;
+
     public CheckoutService(
             CartRepository cartRepository,
             CartItemRepository cartItemRepository,
             InventoryRepository inventoryRepository,
-            OrderService orderService
+            OrderService orderService,
+            CommerceMetrics commerceMetrics
     ) {
         this.cartRepository =
                 cartRepository;
@@ -47,6 +53,8 @@ public class CheckoutService {
 
         this.orderService =
                 orderService;
+
+        this.commerceMetrics = commerceMetrics;
     }
 
     @Transactional
@@ -54,6 +62,70 @@ public class CheckoutService {
             Long userId
     ) {
 
+        Instant startedAt =
+                Instant.now();
+
+        try {
+
+            OrderResponse response =
+                    performCheckout(
+                            userId
+                    );
+
+            commerceMetrics
+                    .recordCheckoutSuccess(
+                            Duration.between(
+                                    startedAt,
+                                    Instant.now()
+                            )
+                    );
+
+            return response;
+
+        } catch (InsufficientStockException exception) {
+
+            commerceMetrics
+                    .recordCheckoutFailure(
+                            "insufficient_stock",
+                            Duration.between(
+                                    startedAt,
+                                    Instant.now()
+                            )
+                    );
+
+            throw exception;
+
+        } catch (InvalidRequestException exception) {
+
+            commerceMetrics
+                    .recordCheckoutFailure(
+                            "invalid_request",
+                            Duration.between(
+                                    startedAt,
+                                    Instant.now()
+                            )
+                    );
+
+            throw exception;
+
+        } catch (RuntimeException exception) {
+
+            commerceMetrics
+                    .recordCheckoutFailure(
+                            "other",
+                            Duration.between(
+                                    startedAt,
+                                    Instant.now()
+                            )
+                    );
+
+            throw exception;
+        }
+    }
+
+    private OrderResponse performCheckout(
+            Long userId
+    ) {
         Cart cart =
                 findCartForUpdate(userId);
 
