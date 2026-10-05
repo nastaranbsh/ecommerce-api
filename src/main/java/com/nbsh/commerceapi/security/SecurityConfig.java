@@ -155,9 +155,16 @@ public class SecurityConfig {
                                 // Public authentication endpoints
                                 .requestMatchers(
                                         "/api/v1/auth/register",
-                                        "/api/v1/auth/login"/*,
+                                        "/api/v1/auth/login",
                                         "/api/v1/health",
-                                        "/actuator/health"*/
+                                        "/actuator/health",
+                                        "/actuator/health/**",
+                                        "/livez",
+                                        "/readyz",
+                                        "/v3/api-docs",
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui.html",
+                                        "/swagger-ui/**"
                                 )
                                 .permitAll()
 
@@ -243,14 +250,6 @@ public class SecurityConfig {
                                         "/api/v1/admin/**"
                                 )
                                 .hasRole("ADMIN")
-
-                                .requestMatchers(
-                                        "/actuator/health",
-                                        "/actuator/health/**",
-                                        "/livez",
-                                        "/readyz"
-                                )
-                                .permitAll()
 
                                 .requestMatchers(
                                         "/actuator/**"

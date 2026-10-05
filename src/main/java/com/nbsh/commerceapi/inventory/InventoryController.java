@@ -1,7 +1,11 @@
 package com.nbsh.commerceapi.inventory;
 
+import com.nbsh.commerceapi.config.OpenApiConfig;
 import com.nbsh.commerceapi.inventory.dto.InventoryResponse;
 import com.nbsh.commerceapi.inventory.dto.UpdateInventoryRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,6 +14,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
+@Tag(
+        name = "Inventory",
+        description = "ADMIN inventory management"
+)
 @RestController
 @RequestMapping(
         "/api/v1/admin/inventory/products"
@@ -34,6 +43,15 @@ public class InventoryController {
                 .getInventory(productId);
     }
 
+    @Operation(
+            summary = "Set product inventory",
+            description = """
+                ADMIN only.
+
+                Sets the authoritative available stock quantity.
+                Checkout performs locked stock validation against this data.
+                """
+    )
     @PutMapping("/{productId}")
     public InventoryResponse updateInventory(
             @PathVariable Long productId,

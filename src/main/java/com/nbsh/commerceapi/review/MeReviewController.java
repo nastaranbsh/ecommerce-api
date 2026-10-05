@@ -1,8 +1,10 @@
 package com.nbsh.commerceapi.review;
 
+import com.nbsh.commerceapi.config.OpenApiConfig;
 import com.nbsh.commerceapi.review.dto.ReviewResponse;
 import com.nbsh.commerceapi.review.dto.UpdateReviewRequest;
 import com.nbsh.commerceapi.security.CurrentUser;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
 @RestController
 @RequestMapping("/api/v1/me/reviews")
 public class MeReviewController {

@@ -84,3 +84,15 @@ security:
 payment:
   fake:
     outcome: ${FAKE_PAYMENT_OUTCOME:SUCCESS}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+
+  show-actuator: false

@@ -1,7 +1,9 @@
 package com.nbsh.commerceapi.order;
 
+import com.nbsh.commerceapi.config.OpenApiConfig;
 import com.nbsh.commerceapi.order.dto.OrderResponse;
 import com.nbsh.commerceapi.order.dto.UpdateOrderStatusRequest;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
 @RestController
 @RequestMapping("/api/v1/admin/orders")
 public class AdminOrderController {

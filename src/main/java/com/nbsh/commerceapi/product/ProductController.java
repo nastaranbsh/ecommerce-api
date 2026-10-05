@@ -1,11 +1,21 @@
 package com.nbsh.commerceapi.product;
 
 import com.nbsh.commerceapi.common.api.PageResponse;
+import com.nbsh.commerceapi.common.exception.ApiErrorResponse;
 import com.nbsh.commerceapi.common.exception.InvalidRequestException;
+import com.nbsh.commerceapi.config.OpenApiConfig;
 import com.nbsh.commerceapi.product.dto.CreateProductRequest;
 import com.nbsh.commerceapi.product.dto.ProductFilter;
 import com.nbsh.commerceapi.product.dto.ProductResponse;
 import com.nbsh.commerceapi.product.dto.UpdateProductRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +31,10 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/products")
+@Tag(
+        name = "Products",
+        description = "Public product catalog and administrative product management"
+)
 public class ProductController {
 
     private final ProductService productService;
@@ -40,6 +54,13 @@ public class ProductController {
         this.productService = productService;
     }
 
+    @SecurityRequirement(
+            name = OpenApiConfig.BEARER_AUTH
+    )
+    @Operation(
+            summary = "Create product",
+            description = "ADMIN only."
+    )
     @PostMapping
     public ResponseEntity<ProductResponse> createProduct(
             @Valid @RequestBody CreateProductRequest request
@@ -53,6 +74,24 @@ public class ProductController {
                 .body(product);
     }
 
+    @Operation(
+            summary = "Get product"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Product found"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Product does not exist",
+                    content = @Content(
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
+            )
+    })
     @GetMapping("/{id}")
     public ProductResponse getProduct(
             @PathVariable Long id
@@ -60,6 +99,16 @@ public class ProductController {
         return productService.getProduct(id);
     }
 
+    @Operation(
+            summary = "Search products",
+            description = """
+                Returns a paginated product catalog.
+
+                Supports free-text search, category filtering,
+                price range filtering, active-state filtering,
+                sorting, and pagination.
+                """
+    )
     @GetMapping
     public PageResponse<ProductResponse> getProducts(
             @RequestParam(required = false)
@@ -77,15 +126,31 @@ public class ProductController {
             @RequestParam(required = false)
             Boolean active,
 
+            @Parameter(
+                    description = "Zero-based page index",
+                    example = "0"
+            )
             @RequestParam(defaultValue = "0")
             int page,
 
+            @Parameter(
+                    description = "Number of results per page. Maximum 100.",
+                    example = "20"
+            )
             @RequestParam(defaultValue = "20")
             int size,
 
+            @Parameter(
+                    description = "Sort property",
+                    example = "price"
+            )
             @RequestParam(defaultValue = "id")
             String sortBy,
 
+            @Parameter(
+                    description = "Sort direction: asc or desc",
+                    example = "asc"
+            )
             @RequestParam(defaultValue = "asc")
             String sortDirection
     ) {
@@ -118,6 +183,13 @@ public class ProductController {
         );
     }
 
+    @SecurityRequirement(
+            name = OpenApiConfig.BEARER_AUTH
+    )
+    @Operation(
+            summary = "Update product",
+            description = "ADMIN only."
+    )
     @PutMapping("/{id}")
     public ProductResponse updateProduct(
             @PathVariable Long id,
@@ -126,6 +198,13 @@ public class ProductController {
         return productService.updateProduct(id, request);
     }
 
+    @SecurityRequirement(
+            name = OpenApiConfig.BEARER_AUTH
+    )
+    @Operation(
+            summary = "Delete product",
+            description = "ADMIN only."
+    )
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(
             @PathVariable Long id

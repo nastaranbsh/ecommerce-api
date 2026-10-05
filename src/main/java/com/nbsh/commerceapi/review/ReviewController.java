@@ -2,10 +2,15 @@ package com.nbsh.commerceapi.review;
 
 import com.nbsh.commerceapi.common.api.PageResponse;
 import com.nbsh.commerceapi.common.exception.InvalidRequestException;
+import com.nbsh.commerceapi.config.OpenApiConfig;
 import com.nbsh.commerceapi.review.dto.CreateReviewRequest;
 import com.nbsh.commerceapi.review.dto.ReviewResponse;
 import com.nbsh.commerceapi.review.dto.ReviewSummaryResponse;
 import com.nbsh.commerceapi.security.CurrentUser;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -88,6 +93,39 @@ public class ReviewController {
                 .getSummary(productId);
     }
 
+    @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
+    @Operation(
+            summary = "Create product review",
+            description = """
+                Creates one review for the authenticated customer.
+
+                The customer must have previously purchased the product
+                through a qualifying order. Only one review per
+                customer/product is allowed.
+                """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Review created"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Review validation failed"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Authentication required"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Customer has not purchased this product"
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Customer already reviewed this product"
+            )
+    })
     @PostMapping
     public ResponseEntity<ReviewResponse>
     createReview(

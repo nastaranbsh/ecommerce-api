@@ -1,10 +1,12 @@
 package com.nbsh.commerceapi.user;
 
+import com.nbsh.commerceapi.config.OpenApiConfig;
 import com.nbsh.commerceapi.security.CurrentUser;
 import com.nbsh.commerceapi.user.dto.AddressResponse;
 import com.nbsh.commerceapi.user.dto.CreateAddressRequest;
 import com.nbsh.commerceapi.user.dto.UpdateProfileRequest;
 import com.nbsh.commerceapi.user.dto.UserResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.net.URI;
 import java.util.List;
 
+@SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
 @RestController
 @RequestMapping("/api/v1/me")
 public class MeController {

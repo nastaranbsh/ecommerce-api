@@ -3,7 +3,10 @@ package com.nbsh.commerceapi.cart;
 import com.nbsh.commerceapi.cart.dto.AddCartItemRequest;
 import com.nbsh.commerceapi.cart.dto.CartResponse;
 import com.nbsh.commerceapi.cart.dto.UpdateCartItemRequest;
+import com.nbsh.commerceapi.config.OpenApiConfig;
 import com.nbsh.commerceapi.security.CurrentUser;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,6 +20,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(
+        name = "Cart",
+        description = "Authenticated customer's shopping cart"
+)
+@SecurityRequirement(
+        name = OpenApiConfig.BEARER_AUTH
+)
 @RestController
 @RequestMapping("/api/v1/me/cart")
 public class CartController {

@@ -1,9 +1,11 @@
 package com.nbsh.commerceapi.order;
 
 import com.nbsh.commerceapi.common.api.PageResponse;
+import com.nbsh.commerceapi.config.OpenApiConfig;
 import com.nbsh.commerceapi.order.dto.OrderResponse;
 import com.nbsh.commerceapi.order.dto.OrderSummaryResponse;
 import com.nbsh.commerceapi.security.CurrentUser;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
 @RestController
 @RequestMapping("/api/v1/me/orders")
 public class OrderController {
