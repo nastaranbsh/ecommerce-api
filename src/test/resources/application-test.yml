@@ -1,0 +1,25 @@
+spring:
+  cache:
+    type: none
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+
+management:
+  health:
+    redis:
+      enabled: false
+
+security:
+  jwt:
+    secret: VGhpcy1pcy1hLXRlc3Qtc2VjcmV0LXN1ZmZpY2llbnRseS1sb25nLTI1Ng==
+    issuer: commerce-api
+    access-token-ttl-seconds: 900
+
+payment:
+  fake:
+    outcome: SUCCESS
