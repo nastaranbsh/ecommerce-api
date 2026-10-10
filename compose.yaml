@@ -5,9 +5,9 @@ services:
     container_name: commerce-postgres
 
     environment:
-      POSTGRES_DB: commerce
-      POSTGRES_USER: commerce
-      POSTGRES_PASSWORD: commerce
+      POSTGRES_DB: ${POSTGRES_DB:-commerce}
+      POSTGRES_USER: ${POSTGRES_USER:-commerce}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
 
     ports:
       - "5432:5432"
@@ -15,13 +15,90 @@ services:
     volumes:
       - commerce-postgres-data:/var/lib/postgresql
 
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
   redis:
     image: redis:8
     container_name: commerce-redis
+
     ports:
       - "6379:6379"
+
     volumes:
       - commerce-redis-data:/data
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "ping"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  commerce-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: commerce-api:local
+
+    container_name: commerce-api
+
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-commerce}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-commerce}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+
+      DEV_ADMIN_EMAIL: ${DEV_ADMIN_EMAIL:-admin@example.com}
+      DEV_ADMIN_PASSWORD: ${DEV_ADMIN_PASSWORD:?DEV_ADMIN_PASSWORD is required}
+
+      APP_ENVIRONMENT: ${APP_ENVIRONMENT:-local}
+
+      SERVER_PORT: ${SERVER_PORT:-8080}
+
+#      JAVA_TOOL_OPTIONS: >-
+#        -XX:MaxRAMPercentage=75.0
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+#    healthcheck:
+#      test:
+#        [
+#          "CMD-SHELL",
+#          "wget -q -O - http://localhost:8080/livez > /dev/null || exit 1"
+#        ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 30s
 
 volumes:
   commerce-postgres-data:
