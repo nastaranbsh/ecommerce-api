@@ -1,22 +1,17 @@
 spring:
-
   application:
     name: commerce-api
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/commerce}
-    username: ${DB_USERNAME:commerce}
-    password: ${DB_PASSWORD:commerce}
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_NAME:commerce-dev}?sslmode=${POSTGRES_SSL_MODE:disable}
+    username: ${POSTGRES_USERNAME:commerce-dev}
+    password: ${POSTGRES_PASSWORD}
 
   jpa:
     open-in-view: false
 
     hibernate:
       ddl-auto: validate
-
-    properties:
-      hibernate:
-        format_sql: true
 
   flyway:
     enabled: true
@@ -25,16 +20,41 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: ${REDIS_TIMEOUT:2s}
+      connect-timeout: ${REDIS_CONNECT_TIMEOUT:2s}
 
-    cache:
-      type: redis
-      cache-names:
-        - reviewSummaries
+  cache:
+    type: redis
+    cache-names:
+      - reviewSummaries
 #      redis:
 #        time-to-live: 10m
 
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${SPRING_SERVER_PORT:8080}
+
+app:
+  dev-admin:
+    enabled: ${DEV_ADMIN_ENABLED:false}
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+    issuer: ${spring.application.name}
+    access-token-ttl-seconds: ${JWT_ACCESS_TOKEN_TTL_SECONDS:900}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+
+  show-actuator: false
 
 management:
   endpoints:
@@ -60,12 +80,15 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-      environment: ${APP_ENVIRONMENT:local}
+      environment: ${APP_DEPLOYMENT_ENVIRONMENT:local}
 
 logging:
   level:
-    org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
+    root: INFO
+    com.nbsh.commerceapi: INFO
+    org.hibernate.SQL: WARN
+    org.springframework.security: WARN
+    org.hibernate.orm.jdbc.bind: WARN
 
   structured:
     format:
@@ -73,26 +96,5 @@ logging:
 
     ecs:
       service:
-        environment: ${APP_ENVIRONMENT:local}
+        environment: ${APP_DEPLOYMENT_ENVIRONMENT:local}
 
-security:
-  jwt:
-    secret: ${JWT_SECRET}
-    issuer: commerce-api
-    access-token-ttl-seconds: ${JWT_ACCESS_TOKEN_TTL_SECONDS:900}
-
-payment:
-  fake:
-    outcome: ${FAKE_PAYMENT_OUTCOME:SUCCESS}
-
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-
-  swagger-ui:
-    path: /swagger-ui.html
-    operations-sorter: method
-    tags-sorter: alpha
-    display-request-duration: true
-
-  show-actuator: false

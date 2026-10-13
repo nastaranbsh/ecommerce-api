@@ -1,6 +1,7 @@
 package com.nbsh.commerceapi.payment.gateway;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -10,6 +11,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
+@Profile({"dev", "test", "demo"})
 public class FakePaymentGateway
         implements PaymentGateway {
 

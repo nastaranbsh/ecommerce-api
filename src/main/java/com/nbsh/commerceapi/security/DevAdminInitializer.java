@@ -6,6 +6,7 @@ import com.nbsh.commerceapi.user.UserRole;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Locale;
 
 @Component
-@Profile("dev")
+@Profile("dev & !prod & !demo")
+@ConditionalOnProperty(
+        prefix = "app.dev-admin",
+        name = "enabled",
+        havingValue = "true"
+)
 public class DevAdminInitializer
         implements ApplicationRunner {
 
