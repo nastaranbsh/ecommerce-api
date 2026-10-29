@@ -1,2 +1,23 @@
 /mvnw text eol=lf
 *.cmd text eol=crlf
+
+
+# Normalize text files
+* text=auto
+
+# Java and build files
+*.java text eol=lf
+*.xml text eol=lf
+*.properties text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sql text eol=lf
+
+# Scripts
+*.sh text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Docker
+Dockerfile text eol=lf
+*.dockerfile text eol=lf

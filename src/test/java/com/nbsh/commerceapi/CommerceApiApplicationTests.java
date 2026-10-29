@@ -1,13 +1,12 @@
 package com.nbsh.commerceapi;
 
+import com.nbsh.commerceapi.support.PostgresIntegrationTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class CommerceApiApplicationTests {
+class CommerceApiApplicationTests
+        extends PostgresIntegrationTest {
 
     @Test
     void contextLoads() {
     }
-
 }

@@ -41,5 +41,8 @@ jobs:
       - name: Show Java version
         run: java --version
 
+#      - name: Make Maven Wrapper executable
+#      - run: chmod +x ./mvnw
+
       - name: Run tests
         run: ./mvnw --batch-mode verify
