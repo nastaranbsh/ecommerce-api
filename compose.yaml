@@ -47,6 +47,7 @@ services:
       start_period: 5s
 
   commerce-api:
+#    image: ghcr.io/nastaranbsh/ecommerce-api:sha-xxxxxxx|latest
     build:
       context: .
       dockerfile: Dockerfile
