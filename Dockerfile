@@ -13,7 +13,7 @@ RUN mvn -B -DskipTests package
 
 
 # ---------- Extract Spring Boot layers ----------
-FROM eclipse-temurin:21-jre-jammy AS extractor
+FROM eclipse-temurin:22-jre-jammy AS extractor
 
 WORKDIR /workspace
 
@@ -28,7 +28,7 @@ RUN java \
 
 
 # ---------- Runtime stage ----------
-FROM eclipse-temurin:21-jre-jammy AS runtime
+FROM eclipse-temurin:22-jre-jammy AS runtime
 
 WORKDIR /application
 
